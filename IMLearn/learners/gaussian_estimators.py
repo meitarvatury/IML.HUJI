@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from numpy.linalg import inv, det, slogdet
+import math
 
 
 class UnivariateGaussian:
@@ -51,8 +52,8 @@ class UnivariateGaussian:
         Sets `self.mu_`, `self.var_` attributes according to calculated estimation (where
         estimator is either biased or unbiased). Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
-
+        self.mu_ = np.mean(X, axis=1)
+        self.var_ = np.var(X, axis=1)
         self.fitted_ = True
         return self
 
@@ -76,7 +77,11 @@ class UnivariateGaussian:
         """
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
-        raise NotImplementedError()
+        pdf = np.vectorize(self.write_pdf)
+        return pdf(X, self.mu_, self.var_)
+
+    def write_pdf(self, sample, mu, var):
+        return (1/math.sqrt(var*2*math.pi))*(math.exp((-((sample-mu)**2))/(2*var)))
 
     @staticmethod
     def log_likelihood(mu: float, sigma: float, X: np.ndarray) -> float:
@@ -97,7 +102,8 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        raise NotImplementedError()
+        likelihood = (1/((sigma*2*math.pi)**(len(X)/2)))*(math.exp((-(np.sum((X-mu)**2)))/(2*sigma)))
+        return np.log(likelihood)
 
 
 class MultivariateGaussian:
@@ -143,8 +149,9 @@ class MultivariateGaussian:
         Sets `self.mu_`, `self.cov_` attributes according to calculated estimation.
         Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
 
+        self.mu_ = np.mean(X)
+        self.cov_ = np.cov(X)
         self.fitted_ = True
         return self
 
@@ -169,6 +176,7 @@ class MultivariateGaussian:
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
         raise NotImplementedError()
+
 
     @staticmethod
     def log_likelihood(mu: np.ndarray, cov: np.ndarray, X: np.ndarray) -> float:
