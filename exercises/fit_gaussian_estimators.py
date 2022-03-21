@@ -73,7 +73,7 @@ def test_multivariate_gaussian():
 
 
     # Question 6 - Maximum likelihood
-    print(likelihood_args_dict[np.max(likelihood_values)])
+    print(np.round(likelihood_args_dict[np.max(likelihood_values)], 3))
 
 
 if __name__ == '__main__':
