@@ -5,14 +5,16 @@ import plotly.io as pio
 pio.templates.default = "simple_white"
 MU_UNI = 10
 SIGMA_UNI = 1
+SAMPLE_SIZE = 1000
 
 
 def test_univariate_gaussian():
     # Question 1 - Draw samples and print fitted model
-    X = np.random.normal(MU_UNI, SIGMA_UNI, 1000)
+    X = np.random.normal(MU_UNI, SIGMA_UNI, SAMPLE_SIZE)
     data = UnivariateGaussian()
     data.fit(X)
     print((data.mu_, data.var_))
+
 
     # Question 2 - Empirically showing sample mean is consistent
     slicing_samples = np.arange(10, 1010, 10)
@@ -24,8 +26,8 @@ def test_univariate_gaussian():
 
     fig1.update_layout(title="distance between the estimated and true value of the expectation,"
                              "as a function of the sample size",
-                      xaxis_title = "sample size",
-                      yaxis_title = "distance between the estimated and true value of the expectation")
+                      xaxis_title ="sample size",
+                      yaxis_title ="distance between the estimated and true value of the expectation")
     fig1.show()
 
     # Question 3 - Plotting Empirical PDF of fitted model
@@ -44,14 +46,34 @@ def test_multivariate_gaussian():
     mu = np.array([0, 0, 4, 0])
     sigma = np.array([[1, 0.2, 0, 0.5], [0.2, 2, 0, 0], [0, 0, 1, 0], [0.5, 0, 0, 1]])
     data = MultivariateGaussian()
-    data.fit(np.random.multivariate_normal(mu, sigma, 1000))
-    print(data.mu_, data.cov_)
+    X = np.random.multivariate_normal(mu, sigma, SAMPLE_SIZE)
+    data.fit(X)
+    print(data.mu_)
+    print(data.cov_)
 
     # Question 5 - Likelihood evaluation
-    raise NotImplementedError()
+    lin_range = np.linspace(-10, 10, 200)
+    likelihood_values = []
+    likelihood_args_dict = {}
+    for f1 in lin_range:
+        res = []
+        for f3 in lin_range:
+            log_likelihood = data.log_likelihood(np.array([f1, 0, f3, 0]), sigma, X)
+            res.append((data.log_likelihood(np.array([f1, 0, f3, 0]), sigma, X)))
+            likelihood_args_dict[log_likelihood] = (f1, f3)
+        likelihood_values.append(res)
+
+    fig3 = go.Figure(
+        data=[go.Heatmap(x=lin_range, y=lin_range, z=likelihood_values)])
+
+    fig3.update_layout(title="Likelihood evaluation as a function of f1,f3 values when mu = [f1,0,f3,0]",
+                       xaxis_title="f3 values",
+                       yaxis_title="f1 values")
+    fig3.show()
+
 
     # Question 6 - Maximum likelihood
-    raise NotImplementedError()
+    print(likelihood_args_dict[np.max(likelihood_values)])
 
 
 if __name__ == '__main__':

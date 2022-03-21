@@ -53,7 +53,11 @@ class UnivariateGaussian:
         estimator is either biased or unbiased). Then sets `self.fitted_` attribute to `True`
         """
         self.mu_ = np.mean(X)
-        self.var_ = np.var(X)
+        if not self.biased_:
+            self.var_ = np.var(X)
+        else:
+            m = X.shape[0]
+            self.var_ = ((m - 1) * np.var(X)) / m
         self.fitted_ = True
         return self
 
@@ -102,8 +106,7 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        likelihood = (1/((sigma*2*math.pi)**(len(X)/2)))*(math.exp((-(np.sum((X-mu)**2)))/(2*sigma)))
-        return np.log(likelihood)
+        return ((-X.shape[0]/2)*(np.log(2*np.pi*sigma)))-((1/(2*sigma))*(np.sum((X-mu)**2)))
 
 
 class MultivariateGaussian:
@@ -130,6 +133,8 @@ class MultivariateGaussian:
         """
         self.mu_, self.cov_ = None, None
         self.fitted_ = False
+        self.det = None
+        self.inv_cov = None
 
     def fit(self, X: np.ndarray) -> MultivariateGaussian:
         """
@@ -151,7 +156,9 @@ class MultivariateGaussian:
         """
 
         self.mu_ = np.mean(X, axis=0)
-        self.cov_ = np.cov(X)
+        self.cov_ = np.cov(X, rowvar=False)
+        self.inv_cov = np.linalg.inv(self.cov_)
+        self.det = np.linalg.det(self.cov_)
         self.fitted_ = True
         return self
 
@@ -176,11 +183,11 @@ class MultivariateGaussian:
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
         pdf = np.vectorize(self.write_pdf)
-        return pdf(X, self.mu_, self.cov_)
+        return pdf(X)
 
-    def write_pdf(self, sample, mu, cov):
-        return (1/math.sqrt(np.linalg.det(cov)*((2*math.pi)**(len(sample)))))*\
-               (math.exp((-0.5*(np.transpose(sample-mu)*np.linalg.inv(cov)*(sample-mu)))))
+    def write_pdf(self, sample):
+        return (1/math.sqrt(self.det*((2*math.pi)**(len(self.cov_))))) * \
+               (math.exp((-0.5*(np.transpose(sample-self.mu_)@self.inv_cov@(sample-self.mu_)))))
 
 
     @staticmethod
@@ -202,5 +209,5 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        likelihood = (1/((np.linalg.det(cov)*((2*math.pi)**(len(mu))))**(len(X)/2)))*\
-               (math.exp((-0.5*(np.transpose(sample-mu)*np.linalg.inv(cov)*(sample-mu)))))
+        return (len(X)/2*(np.log(1/(1/np.sqrt(np.linalg.det(cov)*((2*math.pi)**(len(cov)))))))) - \
+               (0.5 * np.sum(((X - mu) @ (np.linalg.inv(cov))) * (X - mu)))
