@@ -34,11 +34,10 @@ def load_data(filename: str):
     price_y = pd.Series(df['price'])
     price_y[price_y < 0] = -price_y
 
-    df = pd.get_dummies(df, columns=['zipcode'])
+    df = pd.get_dummies(df, columns=['zipcode'], dummy_na=True)
     df.drop(columns=['id', 'date', 'price'], inplace=True)   # remove irrelevant values
     df.drop('sqft_living', axis=1, inplace=True)   # Linear dependent in sqft_above and sqft_basement
-    df.drop('waterfront', axis=1, inplace=True)    # Linear dependent in view
-    df.drop(columns=['long'], inplace=True)    # no enough information about the location of the house
+    df.drop(columns=['long'], inplace=True)    # not enough information about the location of the house
 
     np.where(df < 0, 0, df)
 
@@ -66,15 +65,16 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
         Path to folder in which plots are saved
     """
     for (columnName, x) in X.iteritems():
-        pearson_corr = (x - x.mean()).dot(y - y.mean()) / \
-                       (math.sqrt(np.sum((x-x.mean()) ** 2)) * math.sqrt(np.sum((y-y.mean()) ** 2)))
-        fig1 = go.Figure(data=go.Scatter(x=x, y=y, mode='markers'))
+        if np.sum((x-x.mean()) ** 2) != 0:
+            pearson_corr = (x - x.mean()).dot(y - y.mean()) / \
+                           (math.sqrt(np.sum((x-x.mean()) ** 2)) * math.sqrt(np.sum((y-y.mean()) ** 2)))
+            fig1 = go.Figure(data=go.Scatter(x=x, y=y, mode='markers'))
 
-        fig1.update_layout(title=columnName+" pearson_correlation = " + str(pearson_corr),
-                           xaxis_title=columnName,
-                           yaxis_title="the response")
+            fig1.update_layout(title=columnName+" pearson_correlation = " + str(pearson_corr),
+                               xaxis_title=columnName,
+                               yaxis_title="the response")
 
-        fig1.write_image(output_path+"/"+columnName+".png")
+            fig1.write_image(output_path+"/"+columnName+".png")
 
 
 

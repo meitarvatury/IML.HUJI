@@ -72,7 +72,7 @@ if __name__ == '__main__':
         model_loss = np.round(polynomial_model.loss(test_set['DayOfYear'], test_response), 2)
         loss_by_k.append(model_loss)
         print(model_loss)
-    fig4 = px.bar(x=range(1, 11), y=loss_by_k)
+    fig4 = px.bar(x=range(1, 11), y=loss_by_k, text_auto=True)
     fig4.update_layout(title="The estimated error of the model as a function of k",
                        xaxis_title="k- degree of the polynomial model",
                        yaxis_title="MSE loss")
