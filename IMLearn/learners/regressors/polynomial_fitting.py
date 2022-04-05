@@ -19,7 +19,7 @@ class PolynomialFitting(BaseEstimator):
             Degree of polynomial to fit
         """
         super().__init__()
-        self.k = k
+        self.k = k + 1
         self.linear_model_fitted = None
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:

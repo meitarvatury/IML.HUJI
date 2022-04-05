@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
 
     # Question 5 - Evaluating fitted model on different countries
-    polynomial_model_5 = PolynomialFitting(5).fit(X_israel['DayOfYear'], X_israel['Temp'])
+    polynomial_model_5 = PolynomialFitting(k=4).fit(X_israel['DayOfYear'], X_israel['Temp'])
     countries = ["South Africa", "The Netherlands", "Jordan"]
     countries_loss = []
     for country in countries:
