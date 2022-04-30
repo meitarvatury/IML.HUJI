@@ -55,6 +55,7 @@ class Perceptron(BaseEstimator):
         self.max_iter_ = max_iter
         self.callback_ = callback
         self.coefs_ = None
+        self.fitted_ = True
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -73,7 +74,21 @@ class Perceptron(BaseEstimator):
         -----
         Fits model with or without an intercept depending on value of `self.fit_intercept_`
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            self.coefs_ = np.zeros(X.shape[1] + 1)
+            X = np.concatenate((np.ones((len(X), 1)), X), axis=1)
+        else:
+            self.coefs_ = np.zeros(X.shape[1])
+        for j in range(self.max_iter_):
+            for i in range(len(y)):
+                if (y[i] * (self.coefs_ @ X[i, :])) <= 0:
+                    self.coefs_ = self.coefs_ + y[i]*X[i, :]
+                    self.callback_(self, X[i, :], y[i])
+                    break
+                else:
+                    if i == len(y):
+                        return
+
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -89,7 +104,11 @@ class Perceptron(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.concatenate((np.ones((len(X), 1)), X), axis=1)
+        response = np.sign(X @ self.coefs_)
+        response[response == 0] = 1
+        return response
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -109,4 +128,4 @@ class Perceptron(BaseEstimator):
             Performance under missclassification loss function
         """
         from ...metrics import misclassification_error
-        raise NotImplementedError()
+        return misclassification_error(y, self.predict(X))
