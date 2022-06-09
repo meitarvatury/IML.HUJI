@@ -1,5 +1,4 @@
 from __future__ import annotations
-from copy import deepcopy
 from typing import Tuple, Callable
 import numpy as np
 from IMLearn import BaseEstimator
@@ -37,4 +36,14 @@ def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
     validation_score: float
         Average validation score over folds
     """
-    raise NotImplementedError()
+    x_split = np.array_split(X, cv)
+    y_split = np.array_split(y, cv)
+    train_scores = np.ones(cv)
+    validation_scores = np.ones(cv)
+    for i in range(cv):
+        train_data, labels = np.concatenate(np.delete(x_split, i, 0), axis=0), \
+                      np.concatenate(np.delete(y_split, i, 0), axis=0)
+        fitted_estimator = estimator.fit(train_data, labels)
+        train_scores[i] = scoring(labels, fitted_estimator.predict(train_data))
+        validation_scores[i] = scoring(y_split[i], fitted_estimator.predict(x_split[i]))
+    return np.average(train_scores), np.average(validation_scores)
